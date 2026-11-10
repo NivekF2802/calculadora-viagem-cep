@@ -1,5 +1,7 @@
 # RotaCusto CEP — Calculadora de Custo de Viagem e Combustível por CEP
 
+> **Acesse a aplicação online:** [https://nivekf2802.github.io/calculadora-viagem-cep/](https://nivekf2802.github.io/calculadora-viagem-cep/)
+
 Aplicação web **100% Client-Side** desenvolvida em **HTML5 Semântico, CSS3 Responsivo (Mobile-First + Grid Desktop) e JavaScript Puro (Vanilla ES6+)** para calcular em menos de 10 segundos a distância rodoviária entre dois CEPs, a quantidade de litros de combustível necessários, o custo financeiro total (ida ou ida e volta com pedágios) e o rateio exato por passageiro.
 
 ---
@@ -81,10 +83,7 @@ Aplicação web **100% Client-Side** desenvolvida em **HTML5 Semântico, CSS3 Re
 └── README.md
 ```
 
-## 7. Como Executar Localmente ou Publicar no GitHub Pages
+## 7. Como Executar Localmente ou Acessar Online
 
-1. **Execução Local:** Basta abrir o arquivo `index.html` em qualquer navegador moderno (ou utilizar a extensão *Live Server* no VS Code).
-2. **Publicação no GitHub Pages:**
-   - Faça o push dos arquivos na branch `main` do repositório no GitHub;
-   - Acesse **Settings → Pages**;
-   - Em **Source**, selecione `Deploy from a branch` e escolha `main` / `/ (root)`.
+- **Acesso Online (GitHub Pages):** [https://nivekf2802.github.io/calculadora-viagem-cep/](https://nivekf2802.github.io/calculadora-viagem-cep/)
+- **Execução Local:** Basta abrir o arquivo `index.html` em qualquer navegador moderno (ou utilizar a extensão Live Server no VS Code).
