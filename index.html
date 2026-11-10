@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RotaCusto | Calculadora de Custo de Viagem, Combustível e Pedágio por CEP</title>
+  <meta name="description" content="Calcule em menos de 10 segundos a distância rodoviária entre dois CEPs, litros de combustível necessários, gasto total com pedágio e divisão por passageiro.">
+  <meta name="keywords" content="calculadora de viagem, custo de combustível por cep, calcular distância entre ceps, dividir gasolina viagem, rateio de carona, gasto de combustível">
+  <meta name="author" content="Kevin Fank">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:title" content="RotaCusto — Calculadora de Custo de Viagem e Combustível por CEP">
+  <meta property="og:description" content="Descubra quanto você vai gastar de gasolina e pedágio entre dois CEPs e divida o valor exato por passageiro para enviar no WhatsApp.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f766e'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-size='38'%3E🚗%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-content">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">🚗</span>
+        <div>
+          <h1 class="brand-title">RotaCusto <span class="brand-badge">CEP</span></h1>
+          <p class="brand-subtitle">Calculadora rápida de distância rodoviária, combustível e rateio de viagem</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="status-pill">⚡ Cálculo em &lt; 10s via BrasilAPI + OSRM</span>
+        <button type="button" id="btn-alternar-tema" class="btn-theme-toggle" aria-label="Alternar entre modo claro e escuro">
+          🌙 Modo Escuro
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-layout">
+    <div class="tool-column">
+      <section class="card calculator-section" aria-labelledby="titulo-calculadora">
+        <div class="section-header">
+          <h2 id="titulo-calculadora">Simular Custo da Viagem</h2>
+          <p class="section-desc">Informe os CEPs de origem e destino e os dados do seu veículo para calcular a rota.</p>
+        </div>
+
+        <div class="preset-routes" aria-label="Exemplos rápidos de rotas">
+          <span class="preset-label">Testar rota rápida:</span>
+          <button type="button" class="btn-preset" data-origem="80010-010" data-destino="88010-400">
+            Curitiba/PR → Florianópolis/SC
+          </button>
+          <button type="button" class="btn-preset" data-origem="85560-000" data-destino="85801-000">
+            Dois Vizinhos/PR → Cascavel/PR
+          </button>
+          <button type="button" class="btn-preset" data-origem="01001-000" data-destino="20040-002">
+            São Paulo/SP → Rio de Janeiro/RJ
+          </button>
+        </div>
+
+        <div id="mensagem-alerta" class="alert-box hidden" role="alert" aria-live="polite"></div>
+
+        <form id="form-calculadora" novalidate>
+          <div class="city-search-box">
+            <div class="city-search-header">
+              <span class="city-search-title">🔍 Não sabe o CEP? Pesquise pelo nome da cidade</span>
+              <span class="city-search-sub">Digite a cidade para preencher o CEP de Origem ou Destino</span>
+            </div>
+            <div class="city-search-row">
+              <input
+                type="text"
+                id="busca-nome-cidade"
+                placeholder="Ex.: Gramado, Pato Branco, Balneário Camboriú, Campinas..."
+                autocomplete="off"
+              >
+              <button type="button" id="btn-buscar-cidade" class="btn-city-search">
+                Buscar Cidade
+              </button>
+            </div>
+            <div id="lista-resultados-cidade" class="city-results-list hidden" aria-live="polite"></div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <div class="label-row">
+                <label for="cep-origem">CEP de Origem *</label>
+                <button type="button" id="btn-geolocalizacao" class="btn-link-geo" title="Usar o GPS do navegador para definir a origem">
+                  📍 Usar minha localização atual
+                </button>
+              </div>
+              <input
+                type="text"
+                id="cep-origem"
+                name="cepOrigem"
+                placeholder="00000-000"
+                maxlength="9"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                required
+              >
+              <span id="info-cep-origem" class="cep-helper" aria-live="polite">Digite 8 números ou use o GPS</span>
+            </div>
+
+            <div class="form-group">
+              <div class="label-row">
+                <label for="cep-destino">CEP de Destino *</label>
+                <button type="button" id="btn-inverter-ceps" class="btn-link-geo" title="Inverter CEP de origem e destino">
+                  ⇄ Inverter origem/destino
+                </button>
+              </div>
+              <input
+                type="text"
+                id="cep-destino"
+                name="cepDestino"
+                placeholder="00000-000"
+                maxlength="9"
+                inputmode="numeric"
+                required
+              >
+              <span id="info-cep-destino" class="cep-helper" aria-live="polite">Ex.: 88010-400</span>
+            </div>
+          </div>
+
+          <div class="fieldset-box">
+            <div class="fieldset-header">
+              <span class="fieldset-title">⛽ Meu Veículo e Combustível</span>
+              <span id="badge-preferencias" class="prefs-saved-badge">Preferências salvas automaticamente</span>
+            </div>
+
+            <div class="fuel-selector" aria-label="Preenchimento rápido por tipo de combustível">
+              <span class="fuel-selector-label">Sugestão rápida:</span>
+              <button type="button" class="btn-fuel" data-combustivel="gasolina" data-kml="12.5" data-preco="5.89">
+                ⛽ Gasolina (12,5 km/l • R$ 5,89)
+              </button>
+              <button type="button" class="btn-fuel" data-combustivel="etanol" data-kml="8.8" data-preco="3.99">
+                🌱 Etanol (8,8 km/l • R$ 3,99)
+              </button>
+              <button type="button" class="btn-fuel" data-combustivel="diesel" data-kml="10.5" data-preco="6.09">
+                🚛 Diesel (10,5 km/l • R$ 6,09)
+              </button>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="consumo-kml">Consumo Médio (km/l) *</label>
+                <input
+                  type="number"
+                  id="consumo-kml"
+                  name="consumoKml"
+                  placeholder="Ex.: 12.5"
+                  min="0.5"
+                  max="100"
+                  step="0.1"
+                  required
+                >
+                <span class="field-hint">Média rodoviária do veículo</span>
+              </div>
+
+              <div class="form-group">
+                <label for="preco-combustivel">Preço do Combustível (R$/litro) *</label>
+                <input
+                  type="number"
+                  id="preco-combustivel"
+                  name="precoCombustivel"
+                  placeholder="Ex.: 5.89"
+                  min="0.1"
+                  max="50"
+                  step="0.01"
+                  required
+                >
+                <span class="field-hint">Gasolina, etanol ou diesel</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label for="custo-pedagio">Pedágios / Extras (R$)</label>
+              <input
+                type="number"
+                id="custo-pedagio"
+                name="custoPedagio"
+                placeholder="0.00"
+                min="0"
+                max="10000"
+                step="0.01"
+                value="0"
+              >
+              <span class="field-hint">Valor total na rota</span>
+            </div>
+
+            <div class="form-group">
+              <label for="qtd-passageiros">Nº de Passageiros *</label>
+              <input
+                type="number"
+                id="qtd-passageiros"
+                name="qtdPassageiros"
+                min="1"
+                max="60"
+                step="1"
+                value="1"
+                required
+              >
+              <span class="field-hint">Recalcula rateio ao alterar</span>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <span class="checkbox-label-top">Tipo de Trajeto</span>
+              <label class="toggle-control" for="ida-e-volta">
+                <input type="checkbox" id="ida-e-volta" name="idaEVolta">
+                <span class="toggle-text">🔄 Calcular Ida e Volta (2x)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-calcular" class="btn-primary">
+              Calcular Custo da Viagem
+            </button>
+            <button type="button" id="btn-limpar-form" class="btn-secondary">
+              Limpar Campos
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section id="secao-resultado" class="card result-section hidden" aria-live="polite" aria-labelledby="titulo-resultado">
+        <div class="result-header">
+          <div>
+            <span id="badge-faixa-distancia" class="distance-badge">Viagem Média</span>
+            <h2 id="titulo-resultado">Resumo da Estimativa</h2>
+            <p id="subtitulo-rota" class="route-subtitle">Origem → Destino</p>
+          </div>
+          <span id="metodo-calculo-badge" class="method-badge">Rota Rodoviária</span>
+        </div>
+
+        <div id="painel-metricas" class="metrics-grid"></div>
+
+        <div id="barra-proporcao-custos" class="cost-breakdown-box"></div>
+
+        <div class="map-wrapper">
+          <div class="map-header">
+            <span class="map-title">🗺️ Mapa Interativo da Rota</span>
+            <span class="map-hint">OpenStreetMap + Traçado OSRM</span>
+          </div>
+          <div id="mapa-rota" class="route-map-container" aria-label="Mapa interativo da rota"></div>
+        </div>
+
+        <div class="result-share-bar">
+          <button type="button" id="btn-copiar-whatsapp" class="btn-whatsapp">
+            📲 Copiar Resumo para WhatsApp
+          </button>
+          <span id="feedback-copia" class="copy-feedback hidden" role="status">✅ Copiado para a área de transferência!</span>
+        </div>
+
+        <div id="box-afiliado-contextual" class="affiliate-callout"></div>
+      </section>
+
+      <section class="card history-section" aria-labelledby="titulo-historico">
+        <div class="section-header history-header">
+          <div>
+            <h2 id="titulo-historico">Histórico de Viagens Recentes</h2>
+            <p class="section-desc">Suas últimas 5 simulações ficam salvas neste navegador.</p>
+          </div>
+          <button type="button" id="btn-limpar-historico" class="btn-danger-outline">
+            🗑️ Limpar Histórico
+          </button>
+        </div>
+
+        <div id="estatisticas-historico" class="history-stats"></div>
+
+        <div id="lista-historico" class="history-list"></div>
+      </section>
+    </div>
+
+    <aside class="ad-sidebar" aria-label="Publicidade e Parceiros">
+      <div class="ad-container">
+        <span class="ad-label">Publicidade • Patrocinado</span>
+        <div class="ad-slot-300x250">
+          <div class="ad-Visual-content">
+            <span class="ad-tag">OFERTA AUTOMOTIVA</span>
+            <h3 class="ad-headline">Passe Direto no Pedágio e Abasteça com Cashback</h3>
+            <p class="ad-copy">Peça sua tag automotiva sem mensalidade nos primeiros meses e economize tempo na estrada.</p>
+            <a href="#como-economizar" class="ad-cta">Conhecer Benefícios →</a>
+            <small class="ad-dimensions">Slot IAB 300×250 (Google AdSense / Afiliado)</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="card sidebar-info-card">
+        <h3>💡 Como calculamos a distância?</h3>
+        <p>
+          Consultamos simultaneamente as coordenadas dos dois CEPs via <strong>BrasilAPI v2</strong> e traçamos a rota rodoviária real via <strong>OSRM</strong>.
+        </p>
+        <p>
+          Caso o servidor de mapas esteja offline, aplicamos automaticamente a <strong>Fórmula de Haversine</strong> com fator de correção rodoviária (&alpha; = 1,25).
+        </p>
+      </div>
+    </aside>
+  </main>
+
+  <article class="container seo-article">
+    <div class="card article-card">
+      <h2>Como usar a Calculadora de Custo de Viagem por CEP</h2>
+      <div class="steps-grid">
+        <div class="step-item">
+          <span class="step-number">1</span>
+          <h3>Informe Origem e Destino</h3>
+          <p>Digite o CEP de saída e o CEP de chegada, ou clique em <em>"Usar minha localização atual"</em> para preencher a origem com o GPS do seu celular ou computador.</p>
+        </div>
+        <div class="step-item">
+          <span class="step-number">2</span>
+          <h3>Configure seu Veículo</h3>
+          <p>Insira o consumo médio na estrada (km/l) e o preço por litro do combustível. O <strong>RotaCusto</strong> memoriza esses dados para suas próximas consultas.</p>
+        </div>
+        <div class="step-item">
+          <span class="step-number">3</span>
+          <h3>Divida e Compartilhe</h3>
+          <p>Adicione valores de pedágio, marque se a viagem é de <strong>Ida e Volta</strong> e ajuste o número de passageiros para copiar o resumo pronto para o WhatsApp.</p>
+        </div>
+      </div>
+
+      <hr class="article-divider">
+
+      <h2 id="como-economizar">5 Dicas Práticas para Economizar Combustível na Estrada</h2>
+      <ul class="tips-list">
+        <li><strong>Calibre os pneus antes de sair:</strong> Pneus com pressão abaixo da recomendada pelo fabricante aumentam o atrito e podem elevar o consumo em até 5%.</li>
+        <li><strong>Mantenha velocidade constante:</strong> Conduzir entre 80 km/h e 100 km/h em marchas mais altas reduz a rotação do motor e otimiza a queima de combustível.</li>
+        <li><strong>Evite peso desnecessário no porta-malas:</strong> Cada 50 kg extras no veículo aumentam o esforço em subidas e retomadas de velocidade.</li>
+        <li><strong>Use o ar-condicionado na rodovia:</strong> Acima de 80 km/h, janelas abertas geram arrasto aerodinâmico que consome mais combustível do que o compressor do ar-condicionado.</li>
+        <li><strong>Planeje paradas e abastecimentos:</strong> Postos localizados dentro do perímetro urbano das cidades costumam ter preços por litro mais competitivos do que postos à beira de rodovias pedagiadas.</li>
+      </ul>
+
+      <hr class="article-divider">
+
+      <h2>Perguntas Frequentes (FAQ)</h2>
+      <div class="faq-list">
+        <details class="faq-item" open>
+          <summary>Como saber quantos litros de gasolina vou gastar em uma viagem?</summary>
+          <p>Basta dividir a distância total da viagem (em quilômetros) pelo consumo médio rodoviário do seu carro (em km/l). Por exemplo, em um trajeto de 300 km com um veículo que faz 12 km/l, serão necessários <strong>25 litros</strong> de combustível.</p>
+        </details>
+        <details class="faq-item">
+          <summary>A distância calculada é em linha reta ou pelas rodovias?</summary>
+          <p>A calculadora prioriza a distância real de condução pelas rodovias utilizando o motor de roteamento público <strong>OSRM (Open Source Routing Machine)</strong>. Se o serviço externo estiver temporariamente indisponível, aplicamos a Fórmula Geométrica de Haversine multiplicada pelo índice médio de tortuosidade rodoviária de 1,25.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Como funciona o rateio de combustível e pedágio por passageiro?</summary>
+          <p>Somamos o custo total de combustível com o valor informado de pedágios/extras e dividimos igualmente pelo número de ocupantes do veículo. Você pode alterar a quantidade de passageiros a qualquer momento para ver o valor por pessoa atualizado instantaneamente.</p>
+        </details>
+      </div>
+    </div>
+  </article>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <p class="footer-copy">
+        &copy; 2026 <strong>RotaCusto CEP</strong> — Calculadora de Custo de Viagem e Combustível. Todos os direitos reservados.
+      </p>
+      <p class="footer-credits">
+        Desenvolvido por
+        <a href="https://nivekf2802.github.io/site-pessoal/" target="_blank" rel="noopener">
+          Kevin Fank — Site Pessoal &amp; Portfólio
+        </a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
