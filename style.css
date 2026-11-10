@@ -884,6 +884,35 @@ body.dark-theme .metric-card.highlight {
   z-index: 1;
 }
 
+.map-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.65rem;
+}
+
+.btn-google-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--color-input-bg);
+  border: 1.5px solid var(--color-border);
+  color: var(--color-primary-dark);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.18s ease;
+}
+
+.btn-google-maps:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
 .result-share-bar {
   display: flex;
   align-items: center;

@@ -488,6 +488,7 @@ const elementosDOM = {
   painelMetricas: document.getElementById('painel-metricas'),
   barraProporcaoCustos: document.getElementById('barra-proporcao-custos'),
   mapaRota: document.getElementById('mapa-rota'),
+  btnGoogleMaps: document.getElementById('btn-google-maps'),
   btnCopiarWhatsapp: document.getElementById('btn-copiar-whatsapp'),
   feedbackCopia: document.getElementById('feedback-copia'),
   boxAfiliadoContextual: document.getElementById('box-afiliado-contextual'),
@@ -719,6 +720,24 @@ function renderizarMapaRotaDOM(simulacao) {
   });
 }
 
+function atualizarLinkGoogleMaps(simulacao) {
+  if (!elementosDOM.btnGoogleMaps) {
+    return;
+  }
+  const coordOrigem = simulacao.coordOrigem;
+  const coordDestino = simulacao.coordDestino;
+  if (!coordOrigem || !coordDestino) {
+    elementosDOM.btnGoogleMaps.classList.add('hidden');
+    return;
+  }
+  const lat1 = Number(coordOrigem.latitude);
+  const lon1 = Number(coordOrigem.longitude);
+  const lat2 = Number(coordDestino.latitude);
+  const lon2 = Number(coordDestino.longitude);
+  elementosDOM.btnGoogleMaps.href = `https://www.google.com/maps/dir/?api=1&origin=${lat1},${lon1}&destination=${lat2},${lon2}`;
+  elementosDOM.btnGoogleMaps.classList.remove('hidden');
+}
+
 function renderizarResultadoDOM(simulacao) {
   const classificacao = classificarFaixaDistancia(simulacao.distanciaTotalKm);
 
@@ -780,6 +799,7 @@ function renderizarResultadoDOM(simulacao) {
 
   renderizarProporcaoCustosDOM(simulacao);
   renderizarAfiliadoContextualDOM(simulacao);
+  atualizarLinkGoogleMaps(simulacao);
   elementosDOM.secaoResultado.classList.remove('hidden');
   renderizarMapaRotaDOM(simulacao);
 }
@@ -862,6 +882,7 @@ async function recarregarViagemDoHistorico(viagem) {
     } catch (erroStorage) {}
 
     renderizarMapaRotaDOM(ultimaSimulacao);
+    atualizarLinkGoogleMaps(ultimaSimulacao);
   } catch (erroMapaHistorico) {}
 }
 
