@@ -117,6 +117,55 @@ body {
   }
 }
 
+.ui-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.ui-icon-sm {
+  width: 15px;
+  height: 15px;
+}
+
+.ui-icon-lg {
+  width: 28px;
+  height: 28px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.offline-banner {
+  background: #fef2f2;
+  color: #991b1b;
+  border-bottom: 1px solid #fecaca;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  animation: surgimentoSuave 0.2s ease;
+}
+
+body.dark-theme .offline-banner {
+  background: rgba(220, 38, 38, 0.25);
+  color: #fca5a5;
+  border-bottom-color: rgba(239, 68, 68, 0.35);
+}
+
 .site-header {
   background: linear-gradient(135deg, #090d16 0%, #0f292a 60%, #134e4a 100%);
   color: #ffffff;
@@ -150,6 +199,9 @@ body {
 }
 
 .btn-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   background: rgba(255, 255, 255, 0.09);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -176,10 +228,10 @@ body {
 }
 
 .brand-icon {
-  font-size: 2rem;
   background: linear-gradient(135deg, rgba(20, 184, 166, 0.28) 0%, rgba(15, 118, 110, 0.45) 100%);
   border: 1px solid rgba(94, 234, 212, 0.35);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  color: #5eead4;
   width: 54px;
   height: 54px;
   border-radius: var(--radius-md);
@@ -218,6 +270,7 @@ body {
 .status-pill {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
   font-size: 0.78rem;
   background: rgba(20, 184, 166, 0.15);
   border: 1px solid rgba(94, 234, 212, 0.3);
@@ -325,6 +378,9 @@ body {
 }
 
 .city-search-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.88rem;
   font-weight: 800;
   color: var(--color-primary-dark);
@@ -341,6 +397,9 @@ body {
 }
 
 .btn-city-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
   color: #ffffff;
   font-family: inherit;
@@ -379,6 +438,9 @@ body {
 }
 
 .city-result-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.86rem;
   font-weight: 700;
   color: var(--color-text);
@@ -438,6 +500,9 @@ label,
 }
 
 .btn-link-geo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   background: var(--color-primary-light);
   border: 1px solid rgba(20, 184, 166, 0.28);
   color: var(--color-primary-dark);
@@ -524,6 +589,9 @@ input.input-error {
 }
 
 .fieldset-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.92rem;
   font-weight: 800;
   color: var(--color-primary-dark);
@@ -555,6 +623,9 @@ input.input-error {
 }
 
 .btn-fuel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background-color: var(--color-input-bg);
   border: 1.5px solid var(--color-border);
   color: var(--color-text-muted);
@@ -602,6 +673,9 @@ input.input-error {
 }
 
 .toggle-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -615,6 +689,10 @@ input.input-error {
 
 .btn-primary {
   flex: 1 1 240px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
   color: #ffffff;
   font-family: inherit;
@@ -864,6 +942,9 @@ body.dark-theme .metric-card.highlight {
 }
 
 .map-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.84rem;
   font-weight: 800;
   color: var(--color-text);
@@ -922,6 +1003,9 @@ body.dark-theme .metric-card.highlight {
 }
 
 .btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #ffffff;
   font-family: inherit;
@@ -941,6 +1025,9 @@ body.dark-theme .metric-card.highlight {
 }
 
 .copy-feedback {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--color-success);
@@ -984,6 +1071,9 @@ body.dark-theme .affiliate-link {
 }
 
 .btn-danger-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background-color: transparent;
   color: var(--color-danger);
   border: 1px solid rgba(239, 68, 68, 0.45);
@@ -1116,22 +1206,45 @@ body.dark-theme .affiliate-link {
 }
 
 .ad-slot-300x250 {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   max-width: 300px;
   min-height: 250px;
-  background: radial-gradient(circle at top right, rgba(20, 184, 166, 0.25), transparent 60%),
-    linear-gradient(145deg, #090d16 0%, #1e293b 100%);
-  color: #ffffff;
   border-radius: var(--radius-md);
   border: 1.5px dashed rgba(245, 158, 11, 0.55);
-  padding: 1.2rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  text-align: left;
+  padding: 1.2rem;
+  background-color: #0b1120;
+}
+
+.ad-bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.32;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.ad-slot-300x250:hover .ad-bg-image {
+  transform: scale(1.05);
+  opacity: 0.42;
+}
+
+.ad-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 13, 22, 0.72) 0%, rgba(9, 13, 22, 0.94) 100%);
+  pointer-events: none;
 }
 
 .ad-Visual-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1335,6 +1448,112 @@ body.dark-theme .affiliate-link {
 
 .footer-credits a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="number"] {
+    font-size: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-city-search,
+  .btn-whatsapp,
+  .btn-google-maps {
+    min-height: 44px;
+  }
+
+  .city-search-row {
+    flex-direction: column;
+  }
+
+  .btn-city-search {
+    padding: 0.7rem 1rem;
+    justify-content: center;
+  }
+
+  .route-map-container {
+    height: 230px;
+  }
+
+  .label-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .btn-link-geo {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.85rem;
+  }
+
+  .brand-title {
+    font-size: 1.3rem;
+  }
+
+  .brand-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .card {
+    padding: 1.15rem;
+  }
+
+  .preset-routes {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .btn-preset {
+    width: 100%;
+    text-align: center;
+  }
+
+  .btn-fuel {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+
+  .history-values {
+    text-align: left;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px dashed var(--color-border-light);
+    padding-top: 0.45rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .result-share-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-whatsapp {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-google-maps {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (min-width: 768px) {

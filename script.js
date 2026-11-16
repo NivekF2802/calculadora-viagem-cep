@@ -22,6 +22,51 @@ const estadoGpsOrigem = {
 
 const cacheCeps = new Map();
 
+const ICONE_SVG_MAP_PIN =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+const ICONE_SVG_FUEL =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg>';
+
+const ICONE_SVG_TOLL =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg>';
+
+const ICONE_SVG_TAG =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 1.9a2 2 0 0 1-1.4.6H4a1 1 0 0 0-1 1v4.7a2 2 0 0 1-.6 1.4L.5 13.5a1 1 0 0 0 0 1.4l8.6 8.6a1 1 0 0 0 1.4 0l1.9-1.9a2 2 0 0 1 1.4-.6H19a1 1 0 0 0 1-1v-4.7a2 2 0 0 1 .6-1.4l1.9-1.9a1 1 0 0 0 0-1.4L13.9 3.5a1 1 0 0 0-1.4 0Z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>';
+
+const ICONE_SVG_CAR =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
+
+const ICONE_SVG_SUN =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+
+const ICONE_SVG_MOON =
+  '<svg class="ui-icon ui-icon-sm" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+
+async function fetchComTimeout(url, opcoes = {}, timeoutMs = 7000) {
+  if (typeof navigator !== 'undefined' && 'onLine' in navigator && !navigator.onLine) {
+    throw new Error('Você está sem conexão com a internet. Verifique sua rede.');
+  }
+
+  const controlador = new AbortController();
+  const idTimer = setTimeout(() => controlador.abort(), timeoutMs);
+
+  try {
+    const resposta = await fetch(url, {
+      ...opcoes,
+      signal: controlador.signal
+    });
+    clearTimeout(idTimer);
+    return resposta;
+  } catch (erroFetch) {
+    clearTimeout(idTimer);
+    if (erroFetch.name === 'AbortError') {
+      throw new Error('O tempo de conexão com o servidor expirou. Tente novamente.');
+    }
+    throw erroFetch;
+  }
+}
+
 function converterGrausParaRadianos(graus) {
   return (graus * Math.PI) / 180;
 }
@@ -158,45 +203,47 @@ function carregarPreferenciasVeiculo() {
 
 function carregarHistoricoSalvo() {
   try {
-    const textoHistorico = localStorage.getItem(CHAVE_STORAGE_HISTORICO);
-    if (!textoHistorico) {
-      historicoViagens = [];
+    const textoSalvo = localStorage.getItem(CHAVE_STORAGE_HISTORICO);
+    if (!textoSalvo) {
       return;
     }
-
-    const listaParseada = JSON.parse(textoHistorico);
-    if (Array.isArray(listaParseada)) {
-      historicoViagens = listaParseada.slice(0, LIMITE_HISTORICO);
+    const dados = JSON.parse(textoSalvo);
+    if (Array.isArray(dados)) {
+      historicoViagens = dados.slice(0, LIMITE_HISTORICO);
     }
-  } catch (erroLeitura) {
+  } catch (erroHistorico) {
     historicoViagens = [];
   }
 }
 
-function salvarViagemNoHistorico(resumoViagem) {
-  historicoViagens.unshift(resumoViagem);
-
-  if (historicoViagens.length > LIMITE_HISTORICO) {
-    historicoViagens = historicoViagens.slice(0, LIMITE_HISTORICO);
-  }
+function salvarViagemNoHistorico(novaViagem) {
+  historicoViagens = [
+    novaViagem,
+    ...historicoViagens.filter((viagem) => viagem.id !== novaViagem.id)
+  ].slice(0, LIMITE_HISTORICO);
 
   try {
     localStorage.setItem(CHAVE_STORAGE_HISTORICO, JSON.stringify(historicoViagens));
-  } catch (erroEscrita) {}
+  } catch (erroStorage) {}
 }
 
 function limparHistoricoViagens() {
   historicoViagens = [];
   try {
     localStorage.removeItem(CHAVE_STORAGE_HISTORICO);
-  } catch (erroRemocao) {}
+  } catch (erroStorage) {}
   renderizarHistoricoDOM();
 }
 
 const COORDENADAS_CIDADES_FALLBACK = {
-  'DOIS VIZINHOS-PR': { latitude: -25.7407, longitude: -53.0574 },
+  'DOIS VIZINHOS-PR': { latitude: -25.7505, longitude: -53.0574 },
   'CASCAVEL-PR': { latitude: -24.9578, longitude: -53.4595 },
+  'PATO BRANCO-PR': { latitude: -26.2295, longitude: -52.6716 },
+  'FRANCISCO BELTRAO-PR': { latitude: -26.0811, longitude: -53.0551 },
   'CURITIBA-PR': { latitude: -25.4284, longitude: -49.2733 },
+  'FOZ DO IGUACU-PR': { latitude: -25.5163, longitude: -54.5854 },
+  'MARINGA-PR': { latitude: -23.4205, longitude: -51.9333 },
+  'LONDRINA-PR': { latitude: -23.3045, longitude: -51.1696 },
   'FLORIANOPOLIS-SC': { latitude: -27.5954, longitude: -48.5480 },
   'SAO PAULO-SP': { latitude: -23.5505, longitude: -46.6333 },
   'RIO DE JANEIRO-RJ': { latitude: -22.9068, longitude: -43.1729 },
@@ -229,7 +276,11 @@ async function buscarCoordenadasComplementares(cidade, uf, cepLimpo) {
 
   if (cepLimpo && cepLimpo !== '00000000') {
     try {
-      const respAwesome = await fetch(`https://cep.awesomeapi.com.br/json/${cepLimpo}`);
+      const respAwesome = await fetchComTimeout(
+        `https://cep.awesomeapi.com.br/json/${cepLimpo}`,
+        {},
+        4000
+      );
       if (respAwesome.ok) {
         const dadosAwesome = await respAwesome.json();
         const latAwesome = parseFloat(dadosAwesome.lat);
@@ -247,8 +298,10 @@ async function buscarCoordenadasComplementares(cidade, uf, cepLimpo) {
 
   try {
     const consulta = encodeURIComponent(cidade);
-    const respGeo = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${consulta}&count=5&language=pt&format=json`
+    const respGeo = await fetchComTimeout(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${consulta}&count=5&language=pt&format=json`,
+      {},
+      4500
     );
     if (respGeo.ok) {
       const dadosGeo = await respGeo.json();
@@ -266,7 +319,7 @@ async function buscarCoordenadasComplementares(cidade, uf, cepLimpo) {
   } catch (erroGeo) {}
 
   throw new Error(
-    `O CEP ${formatarMascaraCep(cepLimpo)} (${cidade}/${uf}) não retornou coordenadas geográficas. Tente informar um CEP de rua específico da cidade.`
+    `O CEP ${formatarMascaraCep(cepLimpo)} (${cidade}/${uf}) não retornou coordenadas. Digite um CEP específico ou busque pelo nome da cidade.`
   );
 }
 
@@ -329,7 +382,11 @@ const CEPS_GENERICOS_CAPITAIS = {
 
 async function consultarViaCepFallback(cepEfetivo, cepOriginalLimpo) {
   try {
-    const respViaCep = await fetch(`https://viacep.com.br/ws/${cepEfetivo}/json/`);
+    const respViaCep = await fetchComTimeout(
+      `https://viacep.com.br/ws/${cepEfetivo}/json/`,
+      {},
+      5000
+    );
     if (respViaCep.ok) {
       const dadosViaCep = await respViaCep.json();
       if (!dadosViaCep.erro && dadosViaCep.localidade && dadosViaCep.uf) {
@@ -351,7 +408,7 @@ async function consultarViaCepFallback(cepEfetivo, cepOriginalLimpo) {
     }
   } catch (erroViaCep) {}
 
-  throw new Error(`O CEP ${formatarMascaraCep(cepOriginalLimpo)} não foi encontrado.`);
+  throw new Error(`O CEP ${formatarMascaraCep(cepOriginalLimpo)} não foi localizado nos serviços postais.`);
 }
 
 async function buscarDadosCep(cep) {
@@ -366,15 +423,20 @@ async function buscarDadosCep(cep) {
 
   const cepEfetivo = CEPS_GENERICOS_CAPITAIS[cepLimpo] || cepLimpo;
   const url = `https://brasilapi.com.br/api/cep/v2/${cepEfetivo}`;
-  const response = await fetch(url);
+
+  let response = null;
+  try {
+    response = await fetchComTimeout(url, {}, 6000);
+  } catch (erroRede) {
+    const fallbackRede = await consultarViaCepFallback(cepEfetivo, cepLimpo);
+    cacheCeps.set(cepLimpo, fallbackRede);
+    return fallbackRede;
+  }
 
   if (!response.ok) {
-    if (response.status === 404) {
-      const resultadoFallback = await consultarViaCepFallback(cepEfetivo, cepLimpo);
-      cacheCeps.set(cepLimpo, resultadoFallback);
-      return resultadoFallback;
-    }
-    throw new Error(`Erro ao consultar a BrasilAPI (Status HTTP ${response.status}).`);
+    const resultadoFallback = await consultarViaCepFallback(cepEfetivo, cepLimpo);
+    cacheCeps.set(cepLimpo, resultadoFallback);
+    return resultadoFallback;
   }
 
   const dadosJson = await response.json();
@@ -432,7 +494,7 @@ async function obterDistanciaRodoviaria(coordOrigem, coordDestino) {
     `?overview=full&geometries=geojson`;
 
   try {
-    const response = await fetch(urlOsrm);
+    const response = await fetchComTimeout(urlOsrm, {}, 6000);
     if (response.ok) {
       const dadosRota = await response.json();
       const rotaPrincipal =
@@ -460,12 +522,13 @@ async function obterDistanciaRodoviaria(coordOrigem, coordDestino) {
   return {
     distanciaRotaKm: distanciaEstimada,
     duracaoMinutos: duracaoEstimada,
-    metodo: 'Estimativa Haversine (×1,25)',
+    metodo: 'Estimativa Haversine (Rede OSRM indisponível)',
     coordenadasLinha: linhaDireta
   };
 }
 
 const elementosDOM = {
+  bannerOffline: document.getElementById('banner-offline'),
   formulario: document.getElementById('form-calculadora'),
   cepOrigem: document.getElementById('cep-origem'),
   cepDestino: document.getElementById('cep-destino'),
@@ -496,6 +559,8 @@ const elementosDOM = {
   listaHistorico: document.getElementById('lista-historico'),
   btnLimparHistorico: document.getElementById('btn-limpar-historico'),
   btnAlternarTema: document.getElementById('btn-alternar-tema'),
+  iconeTema: document.getElementById('icone-tema'),
+  textoTema: document.getElementById('texto-tema'),
   buscaNomeCidade: document.getElementById('busca-nome-cidade'),
   btnBuscarCidade: document.getElementById('btn-buscar-cidade'),
   listaResultadosCidade: document.getElementById('lista-resultados-cidade'),
@@ -546,7 +611,7 @@ function ocultarMensagemAlerta() {
 }
 
 function atualizarHelperCep(elementoHelper, mensagem, estado = 'neutro') {
-  elementoHelper.textContent = mensagem;
+  elementoHelper.innerHTML = mensagem;
   elementoHelper.classList.remove('cep-ok', 'cep-erro');
 
   if (estado === 'ok') {
@@ -595,10 +660,10 @@ function renderizarProporcaoCustosDOM(simulacao) {
   cabecalho.className = 'breakdown-header';
 
   const spanComb = document.createElement('span');
-  spanComb.textContent = `⛽ Combustível: ${percentualCombustivel}% (${formatarMoeda(simulacao.custoCombustivel)})`;
+  spanComb.innerHTML = `${ICONE_SVG_FUEL} Combustível: ${percentualCombustivel}% (${formatarMoeda(simulacao.custoCombustivel)})`;
 
   const spanPed = document.createElement('span');
-  spanPed.textContent = `🛣️ Pedágio/Extras: ${percentualPedagio}% (${formatarMoeda(simulacao.custoPedagio)})`;
+  spanPed.innerHTML = `${ICONE_SVG_TOLL} Pedágio/Extras: ${percentualPedagio}% (${formatarMoeda(simulacao.custoPedagio)})`;
 
   cabecalho.appendChild(spanComb);
   cabecalho.appendChild(spanPed);
@@ -632,16 +697,14 @@ function renderizarAfiliadoContextualDOM(simulacao) {
   linkAfiliado.href = '#como-economizar';
 
   if (classificacao.ehViagemLonga) {
-    textoSpan.textContent =
-      '🧳 Vai viajar mais de 200 km? Compare aluguel de carros e faça um check-up ou cotação de Seguro Auto antes de pegar a estrada.';
+    textoSpan.innerHTML = `${ICONE_SVG_CAR} Vai viajar mais de 200 km? Compare locadoras de veículos e faça revisão preventiva antes de pegar a estrada.`;
     linkAfiliado.textContent = 'Ver dicas para viagens longas →';
     container.appendChild(textoSpan);
     container.appendChild(linkAfiliado);
     return;
   }
 
-  textoSpan.textContent =
-    '🏷️ Evite filas nas praças de pedágio: utilize uma tag de passagem automática (Sem Parar / Veloe) na sua rota.';
+  textoSpan.innerHTML = `${ICONE_SVG_TAG} Evite filas nas cabines de pedágio: utilize uma tag de passagem automática na sua rota.`;
   linkAfiliado.textContent = 'Saiba como economizar →';
   container.appendChild(textoSpan);
   container.appendChild(linkAfiliado);
@@ -839,8 +902,8 @@ async function recarregarViagemDoHistorico(viagem) {
   elementosDOM.qtdPassageiros.value = Number(viagem.qtdPassageiros) || 1;
   elementosDOM.idaEVolta.checked = Boolean(viagem.ehIdaEVolta);
 
-  atualizarHelperCep(elementosDOM.infoCepOrigem, `📍 ${viagem.nomeOrigem}`, 'ok');
-  atualizarHelperCep(elementosDOM.infoCepDestino, `📍 ${viagem.nomeDestino}`, 'ok');
+  atualizarHelperCep(elementosDOM.infoCepOrigem, `${ICONE_SVG_MAP_PIN} ${viagem.nomeOrigem}`, 'ok');
+  atualizarHelperCep(elementosDOM.infoCepDestino, `${ICONE_SVG_MAP_PIN} ${viagem.nomeDestino}`, 'ok');
 
   ultimaSimulacao = { ...viagem };
   renderizarResultadoDOM(ultimaSimulacao);
@@ -1036,14 +1099,14 @@ async function consultarPreviaCepNoInput(inputElemento, helperElemento, ehCampoO
     return;
   }
 
-  atualizarHelperCep(helperElemento, 'Consultando CEP na BrasilAPI...', 'neutro');
+  atualizarHelperCep(helperElemento, 'Consultando CEP na base de dados...', 'neutro');
 
   try {
     const dadosCep = await buscarDadosCep(cepLimpo);
     const detalheBairro = dadosCep.bairro ? ` (${dadosCep.bairro})` : '';
     atualizarHelperCep(
       helperElemento,
-      `📍 ${dadosCep.cidade} - ${dadosCep.uf}${detalheBairro}`,
+      `${ICONE_SVG_MAP_PIN} ${dadosCep.cidade} - ${dadosCep.uf}${detalheBairro}`,
       'ok'
     );
   } catch (erroCep) {
@@ -1106,9 +1169,9 @@ async function processarCalculoViagem(event) {
     return;
   }
 
-  const textoOriginalBotao = elementosDOM.btnCalcular.textContent;
+  const htmlOriginalBotao = elementosDOM.btnCalcular.innerHTML;
   elementosDOM.btnCalcular.disabled = true;
-  elementosDOM.btnCalcular.textContent = '⏳ Calculando rota...';
+  elementosDOM.btnCalcular.textContent = 'Calculando rota...';
 
   try {
     const cepOrigem = elementosDOM.cepOrigem.value;
@@ -1133,13 +1196,13 @@ async function processarCalculoViagem(event) {
     if (!estadoGpsOrigem.temOrigemGps) {
       atualizarHelperCep(
         elementosDOM.infoCepOrigem,
-        `📍 ${dadosOrigem.cidade} - ${dadosOrigem.uf}`,
+        `${ICONE_SVG_MAP_PIN} ${dadosOrigem.cidade} - ${dadosOrigem.uf}`,
         'ok'
       );
     }
     atualizarHelperCep(
       elementosDOM.infoCepDestino,
-      `📍 ${dadosDestino.cidade} - ${dadosDestino.uf}`,
+      `${ICONE_SVG_MAP_PIN} ${dadosDestino.cidade} - ${dadosDestino.uf}`,
       'ok'
     );
 
@@ -1209,7 +1272,7 @@ async function processarCalculoViagem(event) {
     );
   } finally {
     elementosDOM.btnCalcular.disabled = false;
-    elementosDOM.btnCalcular.textContent = textoOriginalBotao;
+    elementosDOM.btnCalcular.innerHTML = htmlOriginalBotao;
   }
 }
 
@@ -1254,7 +1317,7 @@ async function copiarResumoWhatsApp() {
 async function obterCidadePorCoordenadasGps(latitude, longitude) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`;
-    const response = await fetch(url);
+    const response = await fetchComTimeout(url, {}, 5000);
     if (response.ok) {
       const dados = await response.json();
       const endereco = dados.address || {};
@@ -1284,7 +1347,7 @@ function usarLocalizacaoGpsAtual() {
 
   atualizarHelperCep(
     elementosDOM.infoCepOrigem,
-    '📡 Obtendo coordenadas do GPS do seu dispositivo...',
+    'Obtendo coordenadas do GPS do seu dispositivo...',
     'neutro'
   );
   elementosDOM.btnGeolocalizacao.disabled = true;
@@ -1311,21 +1374,22 @@ function usarLocalizacaoGpsAtual() {
 
       atualizarHelperCep(
         elementosDOM.infoCepOrigem,
-        `📍 Origem via GPS: ${localDetectado.cidade}${localDetectado.uf ? ' - ' + localDetectado.uf : ''} (${latitude.toFixed(3)}, ${longitude.toFixed(3)})`,
+        `${ICONE_SVG_MAP_PIN} Origem via GPS: ${localDetectado.cidade}${localDetectado.uf ? ' - ' + localDetectado.uf : ''}`,
         'ok'
       );
       elementosDOM.btnGeolocalizacao.disabled = false;
     },
     (erroGps) => {
       elementosDOM.btnGeolocalizacao.disabled = false;
-      atualizarHelperCep(
-        elementosDOM.infoCepOrigem,
-        'Permissão de GPS negada ou indisponível. Digite o CEP manualmente.',
-        'erro'
-      );
-      exibirMensagemAlerta(
-        `Não foi possível obter sua localização (${erroGps.message || 'Permissão negada'}). Digite o CEP de origem manualmente.`
-      );
+      let mensagemErro = 'Permissão de GPS negada. Digite o CEP manualmente.';
+      if (erroGps.code === 2) {
+        mensagemErro = 'Sinal de GPS indisponível no momento. Digite o CEP manualmente.';
+      }
+      if (erroGps.code === 3) {
+        mensagemErro = 'Tempo limite de GPS esgotado. Digite o CEP de origem manualmente.';
+      }
+      atualizarHelperCep(elementosDOM.infoCepOrigem, mensagemErro, 'erro');
+      exibirMensagemAlerta(mensagemErro);
     },
     {
       enableHighAccuracy: true,
@@ -1422,7 +1486,7 @@ async function obterCepRealDaCidade(cidade, uf) {
           `https://viacep.com.br/ws/${encodeURIComponent(uf)}/` +
           `${encodeURIComponent(cidadeSemAcento)}/` +
           `${encodeURIComponent(termoLogradouro)}/json/`;
-        const resp = await fetch(url);
+        const resp = await fetchComTimeout(url, {}, 4000);
         if (resp.ok) {
           const lista = await resp.json();
           if (Array.isArray(lista) && lista.length > 0 && lista[0].cep) {
@@ -1447,7 +1511,7 @@ async function selecionarCidadeNaBusca(itemCidade, ehCampoOrigem) {
 
   atualizarHelperCep(
     helperAlvo,
-    `⏳ Buscando CEP de ${itemCidade.cidade} - ${itemCidade.uf}...`,
+    `Buscando CEP de ${itemCidade.cidade} - ${itemCidade.uf}...`,
     'neutro'
   );
 
@@ -1469,7 +1533,7 @@ async function selecionarCidadeNaBusca(itemCidade, ehCampoOrigem) {
 
   atualizarHelperCep(
     helperAlvo,
-    `📍 ${itemCidade.cidade} - ${itemCidade.uf} (CEP ${cepFormatado})`,
+    `${ICONE_SVG_MAP_PIN} ${itemCidade.cidade} - ${itemCidade.uf} (CEP ${cepFormatado})`,
     'ok'
   );
 
@@ -1496,14 +1560,14 @@ async function pesquisarCidadesPorNome() {
 
   const avisoCarregando = document.createElement('div');
   avisoCarregando.className = 'cep-helper';
-  avisoCarregando.textContent = '🔎 Buscando cidades brasileiras...';
+  avisoCarregando.textContent = 'Buscando municípios...';
   container.appendChild(avisoCarregando);
 
   try {
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
       termo
     )}&count=10&language=pt&format=json`;
-    const resp = await fetch(url);
+    const resp = await fetchComTimeout(url, {}, 4500);
     const dados = resp.ok ? await resp.json() : {};
     const resultadosBrutos = Array.isArray(dados.results) ? dados.results : [];
 
@@ -1542,7 +1606,7 @@ async function pesquisarCidadesPorNome() {
 
       const nomeSpan = document.createElement('span');
       nomeSpan.className = 'city-result-name';
-      nomeSpan.textContent = `📍 ${itemCidade.cidade} - ${itemCidade.uf}`;
+      nomeSpan.innerHTML = `${ICONE_SVG_MAP_PIN} ${itemCidade.cidade} - ${itemCidade.uf}`;
 
       const acoesDiv = document.createElement('div');
       acoesDiv.className = 'city-result-actions';
@@ -1574,7 +1638,7 @@ async function pesquisarCidadesPorNome() {
     container.textContent = '';
     const erroDiv = document.createElement('div');
     erroDiv.className = 'cep-helper cep-erro';
-    erroDiv.textContent = 'Erro ao buscar cidades. Verifique sua conexão.';
+    erroDiv.textContent = 'Não foi possível consultar os municípios. Verifique sua conexão.';
     container.appendChild(erroDiv);
   }
 }
@@ -1619,9 +1683,12 @@ function aplicarTema(ehModoEscuro) {
   if (!elementosDOM.btnAlternarTema) {
     return;
   }
-  elementosDOM.btnAlternarTema.textContent = ehModoEscuro
-    ? '☀️ Modo Claro'
-    : '🌙 Modo Escuro';
+
+  if (ehModoEscuro) {
+    elementosDOM.btnAlternarTema.innerHTML = `${ICONE_SVG_SUN}<span>Modo Claro</span>`;
+    return;
+  }
+  elementosDOM.btnAlternarTema.innerHTML = `${ICONE_SVG_MOON}<span>Modo Escuro</span>`;
 }
 
 function carregarTemaSalvo() {
@@ -1651,6 +1718,17 @@ function alternarTema() {
   } catch (erroSalvarTema) {}
 }
 
+function atualizarEstadoConexao() {
+  if (!elementosDOM.bannerOffline) {
+    return;
+  }
+  if (navigator.onLine) {
+    elementosDOM.bannerOffline.classList.add('hidden');
+    return;
+  }
+  elementosDOM.bannerOffline.classList.remove('hidden');
+}
+
 function inicializarAplicacao() {
   carregarTemaSalvo();
   carregarPreferenciasVeiculo();
@@ -1660,6 +1738,15 @@ function inicializarAplicacao() {
   elementosDOM.precoCombustivel.value = veiculo.precoCombustivel;
 
   renderizarHistoricoDOM();
+  atualizarEstadoConexao();
+
+  window.addEventListener('online', atualizarEstadoConexao);
+  window.addEventListener('offline', atualizarEstadoConexao);
+  window.addEventListener('resize', () => {
+    if (instanciaMapaLeaflet) {
+      instanciaMapaLeaflet.invalidateSize();
+    }
+  });
 
   elementosDOM.cepOrigem.addEventListener('input', () => {
     consultarPreviaCepNoInput(elementosDOM.cepOrigem, elementosDOM.infoCepOrigem, true);

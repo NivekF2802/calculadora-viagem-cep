@@ -87,7 +87,3 @@ Aplicação web **100% Client-Side** desenvolvida em **HTML5 Semântico, CSS3 Re
 
 - **Acesso Online (GitHub Pages):** [https://nivekf2802.github.io/calculadora-viagem-cep/](https://nivekf2802.github.io/calculadora-viagem-cep/)
 - **Execução Local:** Basta abrir o arquivo `index.html` em qualquer navegador moderno (ou utilizar a extensão Live Server no VS Code).
-- **Publicação no GitHub Pages:**
-  - Faça o push dos arquivos na branch `main` do repositório no GitHub;
-  - Acesse **Settings → Pages**;
-  - Em **Source**, selecione `Deploy from a branch` e escolha `main` / `/ (root)`.
